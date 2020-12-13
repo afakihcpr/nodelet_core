@@ -315,14 +315,24 @@ bool Loader::load(const std::string &name, const std::string& type, const ros::M
 	mn->st_queue->disable();
 	mn->mt_queue->disable();
 
-    p->init(name, remappings, my_argv, mn->st_queue.get(), mn->mt_queue.get());
+        p->init(name, remappings, my_argv, mn->st_queue.get(), mn->mt_queue.get());
 
 	mn->st_queue->enable();
 	mn->mt_queue->enable();
 
 
     ROS_DEBUG("Done initing nodelet %s", name.c_str());
-  } catch(...) {
+  } catch(const HungInitializationException& e) {
+    Impl::M_stringToNodelet::iterator it = impl_->nodelets_.find(name);
+    p.reset();   
+    if (it != impl_->nodelets_.end())
+    {
+      impl_->nodelets_.erase(it);
+      ROS_DEBUG ("Failed to initialize nodelet %s", name.c_str ());
+      return (false);
+    }
+  }
+    catch(...) {
     Impl::M_stringToNodelet::iterator it = impl_->nodelets_.find(name);
     if (it != impl_->nodelets_.end())
     {
