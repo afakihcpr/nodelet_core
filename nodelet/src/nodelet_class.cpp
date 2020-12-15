@@ -30,7 +30,7 @@
 #include <nodelet/nodelet.h>
 #include <nodelet/detail/callback_queue.h>
 #include <nodelet/detail/callback_queue_manager.h>
-
+#include <nodelet/haltable_execution.h>
 #include <ros/ros.h>
 #include <ros/callback_queue.h>
 
@@ -131,7 +131,26 @@ void Nodelet::init(const std::string& name, const M_string& remapping_args, cons
 
   NODELET_DEBUG ("Nodelet initializing");
   inited_ = true;
-  this->onInit ();
+
+  const auto init = [this]()
+  {
+    this->onInit();
+  };
+  const auto on_init_failure = [this](const uint8_t attempt)
+  {
+    NODELET_WARN_STREAM("Attempt " <<  static_cast<int>(attempt) << " to load nodelet " << nodelet_name_ << " failed ");
+  };
+
+  const auto init_timeout = 2000;
+  const auto max_init_attempts = 3;
+
+  const auto attempts = HaltableExecution(init, on_init_failure, init_timeout, max_init_attempts)();
+
+  if (attempts >= max_init_attempts)
+  {
+    NODELET_ERROR_STREAM("Failed to initialize nodelet " << name << " after " << static_cast<int>(attempts) << " attempts!");
+    throw HungInitializationException();
+  }
 }
 
 } // namespace nodelet

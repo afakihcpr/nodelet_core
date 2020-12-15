@@ -183,6 +183,14 @@ public:
   {}
 };
 
+class HungInitializationException : public Exception
+{
+public:
+  HungInitializationException()
+  : Exception("Nodelet initialization hung.")
+  {}
+};
+
 class NODELETLIB_DECL Nodelet
 {
   // Protected data fields for use by the subclass.

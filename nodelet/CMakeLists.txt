@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1)
 project(nodelet)
+
+set (CMAKE_CXX_STANDARD 11)
 
 ## Find catkin dependencies
 find_package(catkin REQUIRED
